@@ -1,0 +1,85 @@
+import tensorflow as tf
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import entropy
+
+# KL Divergence for each feature
+def kl_divergence(feature_name, dataset):
+    neg_feature_data = dataset[dataset['Output'] == 0][feature_name] # 负样本数据
+    pos_feature_data = dataset[dataset['Output'] == 1][feature_name] # 正样本数据
+
+    min_value = min(neg_feature_data.min(), pos_feature_data.min())
+    max_value = max(neg_feature_data.max(), pos_feature_data.max())
+    neg_hist, neg_bin = np.histogram(neg_feature_data, bins = 10, range=(min_value, max_value), density = True)
+    pos_hist, pos_bin = np.histogram(pos_feature_data, bins = 10, range=(min_value, max_value), density = True)
+    pos_hist[pos_hist == 0] = 1e-7
+    neg_hist[neg_hist == 0] = 1e-7
+    return entropy(neg_hist, pos_hist, base = 2)
+def get_all_kl_divergence(df):
+    features =[]
+    feature_kl = []
+    size = len(df.columns)
+    i = 0
+    # print(df[df.columns[19944]])
+    for feature in df.columns:
+        if feature == 'label' or feature == 'file_id':
+            continue
+        features.append(feature)
+        feature_kl.append(kl_divergence(feature, df))
+        i = i + 1
+        print('process:{} / {}'.format(i, feature))
+    kl_feature_dataset = pd.DataFrame()
+    kl_feature_dataset['feature_name'] = features
+    kl_feature_dataset['kl_divergence'] = feature_kl
+#Geo Dataset should be downloaded from NCBI then import then from Google drive
+#First Dataset: GSE25724
+df_GSE25724 = pd.read_csv('/content/drive/MyDrive/Prediction_T2D/Data/GSE25724.csv', index_col = 0)
+df_GSE25724.shape
+    final = kl_feature_dataset.sort_values('kl_divergence', ascending=False)
+    return final
+# Calculate the KL divergence for GSE15773 feature
+df_GSE25724 = pd.read_csv('/content/drive/MyDrive/Prediction_T2D/Data/GSE25724.csv', index_col = 0)
+dd_GSE25724 = get_all_kl_divergence(df_GSE25724)
+choosed_features = dd_GSE25724[dd_GSE25724['kl_divergence'] > 3].reset_index(drop = True)
+#choosed_features
+#Save new GSE25724 dataset with selected genes
+df_choosed_GSE25724 = df[choosed_features['feature_name'].tolist()[1:] + ['Output']]
+df_choosed_GSE25724.to_csv('/content/drive/MyDrive/Prediction_T2D/Data_Selected/GSE25724_choosed.csv') # Saving to a new file
+#df_choosed_GSE25724.head(4)
+
+#Second Dataset: GSE20950
+# Calculate the KL divergence for GSE20950 feature
+df_GSE20950 = pd.read_csv('/content/drive/MyDrive/Prediction_T2D/Data/GSE20950.csv', index_col = 0)
+dd__GSE20950 = get_all_kl_divergence(df_GSE20950)
+choosed_features_20950 = dd20950[dd20950['kl_divergence'] > 3].reset_index(drop = True)
+#choosed_features_20950
+df20950_choosed = df20950[choosed_features_20950['feature_name'].tolist()[1:] + ['Output']]
+#Save new GSE20950 dataset with selected genes
+df20950_choosed.to_csv('/content/drive/MyDrive/Prediction_T2D/Data_Selected/GSE20950_choosed.csv') # Saving to a new file
+df20950_choosed.head(4)
+
+#Third Dataset: GSE26637
+# Calculate the KL divergence for GSE26637 feature
+df26637 = pd.read_csv('/content/drive/MyDrive/Prediction_T2D/Data/GSE26637.csv', index_col = 0)
+dd26637 = get_all_kl_divergence(df26637)
+choosed_features_26637 = dd26637[dd26637['kl_divergence'] > 3].reset_index(drop = True)
+#choosed_features_26637
+
+#Save new 26637 dataset with selected genes
+df26637_choosed = df26637[choosed_features_26637['feature_name'].tolist()[1:] + ['Output']]
+df26637_choosed.to_csv('/content/drive/MyDrive/Prediction_T2D/Data_Selected/GSE26637_choosed.csv') # Saving to a new file
+df26637_choosed.head(4)
+
+#Fourth Dataset: GSE6798
+# Calculate the KL divergence for GSE6798 feature
+df6798 = pd.read_csv('/content/drive/MyDrive/Prediction_T2D/Data/GSE6798.csv', index_col = 0)
+dd6798 = get_all_kl_divergence(df6798)
+choosed_features_6798 = dd6798[dd6798['kl_divergence'] > 3].reset_index(drop = True)
+#choosed_features_6798
+
+#Save new GSE6798 dataset with selected genes
+df6798_choosed = df6798[choosed_features_6798['feature_name'].tolist()[1:] + ['Output']]
+df6798_choosed.to_csv('/content/drive/MyDrive/Prediction_T2D/Data_Selected/GSE6798_choosed.csv') # Saving to a new file
+#df6798_choosed.head(4)
